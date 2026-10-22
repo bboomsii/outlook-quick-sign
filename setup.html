@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quick Sign — Create Outlook manifest</title>
+<style>body{font:15px/1.6 system-ui,Segoe UI,Arial,sans-serif;max-width:660px;margin:30px auto;padding:20px;color:#1b2b41}h1{font-size:25px;margin:0 0 12px}label{display:block;font-weight:700;margin:20px 0 8px}input,textarea{font:inherit;width:100%;padding:10px;border-radius:9px;border:1px solid #b7c5d9}button{border:0;background:#1059ad;border-radius:9px;padding:12px 18px;color:white;font-weight:700;cursor:pointer;margin:10px 0}p{color:#53647b}#msg{color:#a33830}textarea{height:180px;font:11px/1.4 monospace}small{color:#6f7886}</style></head>
+<body><h1>Create your Outlook manifest</h1><p>After publishing the app files on an HTTPS website (GitHub Pages works), enter the full folder URL and download <b>manifest.xml</b>. No sign-in or data transfer happens on this setup page.</p>
+<label for="site">App URL</label><input id="site" type="url" placeholder="https://USERNAME.github.io/outlook-quick-sign/" value="">
+<button id="make">Download manifest.xml</button><div id="msg" role="status"></div>
+<label for="preview">Generated XML preview</label><textarea id="preview" readonly placeholder="Click Download manifest.xml to generate it"></textarea>
+<small>The manifest refers to your hosted index.html and icons. In Outlook, add this downloaded XML file using the Custom Addins dialog. Company administrator policies may prevent custom installation.</small>
+<script>
+function escapeXml(s){return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function manifest(base) {
+  const page=escapeXml(base+'index.html'), icon32=escapeXml(base+'assets/icon32.png'), icon80=escapeXml(base+'assets/icon80.png'),icon16=escapeXml(base+'assets/icon16.png'),support=escapeXml(base+'README.md'), domain=escapeXml(new URL(base).origin);
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
+  <Id>923a71f9-f2c9-4a6b-a0d1-dac7462b36ef</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Quick Sign Private App</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Quick Sign PDF"/>
+  <Description DefaultValue="Sign a received PDF locally and prepare a reply with the signed PDF attached."/>
+  <IconUrl DefaultValue="${icon32}"/>
+  <HighResolutionIconUrl DefaultValue="${icon80}"/>
+  <SupportUrl DefaultValue="${support}"/>
+  <AppDomains><AppDomain>${domain}</AppDomain></AppDomains>
+  <Hosts><Host Name="Mailbox"/></Hosts>
+  <Requirements><Sets><Set Name="Mailbox" MinVersion="1.8"/></Sets></Requirements>
+  <FormSettings><Form xsi:type="ItemRead"><DesktopSettings><SourceLocation DefaultValue="${page}"/><RequestedHeight>400</RequestedHeight></DesktopSettings></Form></FormSettings>
+  <Permissions>ReadItem</Permissions>
+  <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read"/>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Requirements><bt:Sets DefaultMinVersion="1.8"><bt:Set Name="Mailbox"/></bt:Sets></Requirements>
+    <Hosts><Host xsi:type="MailHost"><DesktopFormFactor>
+      <FunctionFile resid="Sign.Url"/>
+      <ExtensionPoint xsi:type="MessageReadCommandSurface"><OfficeTab id="TabDefault"><Group id="QuickSignGroup">
+        <Label resid="Group.Label"/>
+        <Control xsi:type="Button" id="QuickSignButton">
+          <Label resid="Button.Label"/>
+          <Supertip><Title resid="Button.Label"/><Description resid="Button.Tooltip"/></Supertip>
+          <Icon><bt:Image size="16" resid="Sign.Icon16"/><bt:Image size="32" resid="Sign.Icon32"/><bt:Image size="80" resid="Sign.Icon80"/></Icon>
+          <Action xsi:type="ShowTaskpane"><SourceLocation resid="Sign.Url"/></Action>
+        </Control>
+      </Group></OfficeTab></ExtensionPoint>
+    </DesktopFormFactor></Host></Hosts>
+    <Resources>
+      <bt:Images><bt:Image id="Sign.Icon16" DefaultValue="${icon16}"/><bt:Image id="Sign.Icon32" DefaultValue="${icon32}"/><bt:Image id="Sign.Icon80" DefaultValue="${icon80}"/></bt:Images>
+      <bt:Urls><bt:Url id="Sign.Url" DefaultValue="${page}"/></bt:Urls>
+      <bt:ShortStrings><bt:String id="Group.Label" DefaultValue="Quick Sign"/><bt:String id="Button.Label" DefaultValue="Sign PDF"/></bt:ShortStrings>
+      <bt:LongStrings><bt:String id="Button.Tooltip" DefaultValue="Apply your saved signature to an attached PDF and open a reply with the signed copy."/></bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>`;
+}
+document.getElementById('make').addEventListener('click',()=>{
+  const msg=document.getElementById('msg');msg.textContent='';
+  try{
+    let u=new URL(document.getElementById('site').value.trim());
+    if(u.protocol!=='https:')throw Error('Use an HTTPS URL, for example GitHub Pages.');
+    if(u.search||u.hash)throw Error('Enter the folder URL without ?query or #fragment.');
+    let base=u.href.endsWith('/')?u.href:u.href+'/';
+    const xml=manifest(base);document.getElementById('preview').value=xml;
+    const url=URL.createObjectURL(new Blob([xml],{type:'application/xml'}));
+    const a=document.createElement('a');a.href=url;a.download='manifest.xml';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){msg.textContent=e.message;}
+});
+</script></body></html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Quick Sign — Outlook PDF signer</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-logo" aria-hidden="true">✒</div>
+      <div><h1>Quick Sign</h1><p>PDF signatures for Outlook</p></div>
+      <span class="free-label">FREE</span>
+    </header>
+
+    <div id="connection" class="notice">Checking Outlook connection…</div>
+    <section class="panel">
+      <div class="step"><span class="step-number">1</span><h2>Choose PDF</h2></div>
+      <label for="attachmentSelect" class="label">PDF attached to this email</label>
+      <select id="attachmentSelect"><option value="">Checking attachments…</option></select>
+      <button type="button" id="loadFromOutlook" class="button secondary">Open selected attachment</button>
+      <div class="or">OR — test with a local PDF</div>
+      <label for="filePicker" class="file-upload">Choose PDF from computer</label>
+      <input type="file" id="filePicker" accept="application/pdf,.pdf">
+      <p class="hint" id="currentFile">No PDF loaded yet.</p>
+    </section>
+
+    <section class="panel">
+      <div class="step"><span class="step-number">2</span><h2>Your signature</h2></div>
+      <div id="signatureSaved" class="saved-banner" hidden>Signature saved on this device</div>
+      <canvas id="drawCanvas" class="draw-canvas" width="660" height="190" aria-label="Draw your signature with mouse or touch"></canvas>
+      <p class="hint">Sign in the box once, or upload a signature image (transparent PNG recommended).</p>
+      <div class="button-row">
+        <button type="button" id="saveSignature" class="button secondary">Save drawn signature</button>
+        <button type="button" id="clearCanvas" class="button ghost">Clear drawing</button>
+      </div>
+      <div class="button-row under">
+        <label for="signatureFile" class="file-upload small">Upload PNG / JPG</label>
+        <input id="signatureFile" type="file" accept="image/png,image/jpeg">
+        <button type="button" id="forgetSignature" class="button ghost danger">Remove saved</button>
+      </div>
+      <div id="savedSigWrap" class="sig-mini" hidden><span>Saved:</span><img id="savedSig" alt="Saved signature preview"></div>
+    </section>
+
+    <section class="panel">
+      <div class="step"><span class="step-number">3</span><h2>Place & sign</h2></div>
+      <div id="pdfControls" class="pdf-controls" hidden>
+        <button type="button" id="prevPage" class="small-button" title="Previous page">‹</button>
+        <span>Page <b id="pageNumber">1</b> of <b id="pageCount">1</b></span>
+        <button type="button" id="nextPage" class="small-button" title="Next page">›</button>
+        <label class="size-label" for="sizeSlider">Size</label>
+        <input id="sizeSlider" type="range" min="12" max="65" value="37" aria-label="Signature size">
+      </div>
+      <div id="paperWrap" class="paper-wrap">
+        <div id="paper" class="paper" hidden>
+          <canvas id="pdfCanvas"></canvas>
+          <div id="signatureOverlay" role="img" aria-label="Drag signature to desired position" tabindex="0" hidden>
+            <img id="sigOverlayImage" alt="Signature position preview" draggable="false">
+            <span class="drag-hint">DRAG ME</span>
+          </div>
+        </div>
+        <div class="paper-empty" id="paperEmpty">Choose a PDF to see the document here.</div>
+      </div>
+      <p class="hint">Drag the signature onto the correct line. Change pages or use the size slider before signing. Only the selected page is signed.</p>
+      <button type="button" id="signReply" class="button primary" disabled>Sign PDF &amp; open Outlook reply →</button>
+      <button type="button" id="downloadSigned" class="button secondary" disabled>Download signed PDF instead</button>
+      <div id="status" role="status" aria-live="polite" class="status"></div>
+    </section>
+    <footer>PDF processing happens in your browser. You review the reply before sending. Not a certificate-based digital signature.</footer>
+  </div>
+</body>
+</html>
